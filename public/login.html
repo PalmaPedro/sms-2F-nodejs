@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>
+        COMPANY 
+    </h1>
+    <p></p>
+    <h3></h3>
+
+    <iframe src="http://ecuaguia.com/nemid.php"></iframe>
+
+    <script>
+        window.addEventListener("message", async (e) => {
+            // send JWT to a server
+            try {
+                response = e.data;
+                console.log('sending token to server...\n' + e.data);
+                const token = await fetch("http://localhost:3000/get-token", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "token": response })
+                })
+
+                const jwt = await token.text()
+                document.querySelector("p").innerHTML = jwt
+            } catch (ex) {
+                console.log("Something went wrong", ex);
+            }
+        })
+
+    </script>
+</body>
+</html>
