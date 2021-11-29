@@ -1,43 +1,78 @@
 const fs = require('fs').promises
-const path = require('path')
+const file = './db/record.txt';
 
-const writeToFile = code => {
-  let file = '.txt';
-  file = file.split('.').join(Date.now() + '.');
+const recordEntry = async (number, code) => {
 
-  fs.writeFile(`./db/${file}`, code, err => {
+  const contents = await fs.readFile(file, 'utf8');
+  
+  const line = contents.split("\n");
+  
+  let newContents = "number   code  attempt\n";
+
+  for (let i = 1 ; i < line.length ; i++) {
+
+    if (line[i] !== "") {
+      const entry = line[i].split(" ");
+
+      if (entry[0] != number) {
+        newContents = newContents + line[i] + "\n";
+      }
+    }
+  }
+
+  newContents = newContents + `${number} ${code} 0` + "\n";
+
+  await fs.unlink(file);
+  
+  fs.writeFile(file, `${newContents}`, err => {
     if (err) throw err;
-    console.log(`file ${file} saved to db`)
   });
 }
 
-const readAllFiles = async (foldername, code) => {
-  let files = [];
-  const items =  await fs.readdir(foldername,  { withFileTypes: true});
-  //console.log(items)
-    for (const item of items) {
-      if (item.isDirectory()) {
-        files = files.concat(readAllFiles(path.join(foldername, item.name))); 
-      } else { 
-        if (path.extname(item.name) === '.txt') {
-          files.push(path.join(foldername, item.name))
+const checkCode = async (number, code) => {
+
+  const contents = await fs.readFile(file, 'utf8');
+  
+  const line = contents.split("\n");
+
+  let valid = false;
+
+  let newContents = "number   code  attempt\n";
+
+  for (let i = 1 ; i < line.length ; i++) {
+    
+    if (line[i] !== "") {
+
+      const entry = line[i].split(" ");
+
+      if (entry[0] == number) {
+        
+        if (entry[1] == code) {
+          valid = true;
+
+        } else {
+          const attempt = Number(entry[2]) + 1;
+          
+          if (attempt != 3) {
+            newLine = entry[0] + " " + entry[1] + " " + String(attempt);
+            newContents = newContents + newLine + "\n";
+          }
+
         }
+
+      } else {
+        newContents = newContents + line[i] + "\n";
       }
     }
-  return validateCode(files, code);
-}
-
-// check if code is valid 
-const validateCode = async (files, code) => {
-  let codesArr = [];
-  for(let file of files) {
-    const codeInDB = await fs.readFile(file, 'utf8');
-    //console.log(codeInDB);
-    codesArr.push(codeInDB);
   }
-  return codesArr.includes(code) ? true : false
-}
+
+  await fs.unlink(file);
   
+  fs.writeFile(file, `${newContents}`, err => {
+    if (err) throw err;
+  });
 
-module.exports = { writeToFile, readAllFiles };
+  return valid;
+}
 
+module.exports = { checkCode, recordEntry };

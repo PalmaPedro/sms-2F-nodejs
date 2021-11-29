@@ -2,7 +2,8 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const path = require('path')
 const FormData = require('form-data')
-const { writeToFile, readAllFiles } = require('./util/util.js')
+const { checkCode, recordEntry } = require('./util/util.js')
+const number = '91708509'
 
 const app = express();
 
@@ -33,11 +34,11 @@ app.post('/get-token', (req, res) => {
   console.log(`Generated code: ${code}\nSending as SMS...`);
 
   // send code to queue
-  writeToFile(code.toString());
+  recordEntry(number, code.toString());
 
   // send SMS with code for validation
   const form = new FormData();
-    form.append("to_phone", 50274446)
+    form.append("to_phone", number)
     form.append("message", `Your verification code is: ${code}`)
     form.append("api_key", "ebd0a9bb-a1e4-46ea-ad19-2af2ea302f56") 
 
@@ -60,13 +61,11 @@ app.post('/validate', async (req, res) => {
   console.log(code)
 
   // check if code matches with any stored in db
-  if (await readAllFiles('db', code)) {
+  if (await checkCode(number, code)) {
     console.log('code valid')
   } else {
     console.log('wrong code, try again!') 
   } 
-  
-  // delete message from db
 
 })
 
