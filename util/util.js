@@ -1,37 +1,35 @@
-const fs = require('fs').promises
+const fs = require('fs')
 const file = './db/record.txt';
 
-const recordEntry = async (number, code) => {
+const recordEntry = (number, code) => {
 
-  const contents = await fs.readFile(file, 'utf8');
-  
-  const line = contents.split("\n");
-  
   let newContents = "number   code  attempt\n";
 
-  for (let i = 1 ; i < line.length ; i++) {
+  const contents = fs.readFileSync(file, 'utf8');
 
-    if (line[i] !== "") {
-      const entry = line[i].split(" ");
+  const line = contents.split("\n");
 
-      if (entry[0] != number) {
-        newContents = newContents + line[i] + "\n";
+    for (let i = 1 ; i < line.length ; i++) {
+
+      if (line[i] !== "") {
+        const entry = line[i].split(" ");
+
+        if (entry[0] != number) {
+          newContents = newContents + line[i] + "\n";
+        }
       }
     }
-  }
 
   newContents = newContents + `${number} ${code} 0` + "\n";
 
-  await fs.unlink(file);
+  fs.unlinkSync(file);
   
-  fs.writeFile(file, `${newContents}`, err => {
-    if (err) throw err;
-  });
+  fs.writeFileSync(file, `${newContents}`);
 }
 
-const checkCode = async (number, code) => {
+const checkCode = (number, code) => {
 
-  const contents = await fs.readFile(file, 'utf8');
+  const contents = fs.readFileSync(file, 'utf8');
   
   const line = contents.split("\n");
 
@@ -66,13 +64,31 @@ const checkCode = async (number, code) => {
     }
   }
 
-  await fs.unlink(file);
+  fs.unlinkSync(file);
   
-  fs.writeFile(file, `${newContents}`, err => {
-    if (err) throw err;
-  });
+  fs.writeFileSync(file, `${newContents}`);
 
   return valid;
 }
 
-module.exports = { checkCode, recordEntry };
+const readAttempt = (number) => {
+
+  const contents = fs.readFileSync(file, 'utf8');
+  
+  const line = contents.split("\n");
+
+  for (let i = 1 ; i < line.length ; i++) {
+    
+    if (line[i] !== "") {
+
+      const entry = line[i].split(" ");
+
+      if (entry[0] == number) {
+        return entry[2];
+      }
+    }
+  }
+
+}
+
+module.exports = { checkCode, recordEntry, readAttempt };

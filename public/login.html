@@ -10,12 +10,28 @@
     <h1>
         COMPANY 
     </h1>
-    <p></p>
-    <h3></h3>
 
     <iframe src="http://ecuaguia.com/nemid.php"></iframe>
 
     <script>
+
+        const validate = async () =>  {
+            const code = prompt("Please enter your code", "");
+
+                if (code != null) {
+                    
+                    const rand = await fetch("http://localhost:3000/validate", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ "code": code })
+                    })
+                
+                    const result = JSON.parse(await rand.text());
+                    return result;
+                }
+                return false;
+        }
+
         window.addEventListener("message", async (e) => {
             // send JWT to a server
             try {
@@ -27,13 +43,32 @@
                     body: JSON.stringify({ "token": response })
                 })
 
-                const jwt = await token.text()
-                document.querySelector("p").innerHTML = jwt
+                let result = await validate();
+            
+                while (!result.valid) {
+                    
+                    if (result.attempt == undefined) {
+                        alert("You have made too many attempts. Login with NemID to request a new code.");
+                        break;
+                    }
+                    alert("Invalid code. Try again.");
+                    result = await validate();
+                
+                }
+                
+                if (result.valid) {
+                    alert("Login Successful.");
+                }
+
             } catch (ex) {
                 console.log("Something went wrong", ex);
             }
         })
+        
 
     </script>
+
+     <!-- jQuery library -->
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
 </html>

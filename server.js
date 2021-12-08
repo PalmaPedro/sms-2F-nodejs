@@ -2,7 +2,7 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const path = require('path')
 const FormData = require('form-data')
-const { checkCode, recordEntry } = require('./util/util.js')
+const { checkCode, recordEntry, readAttempt } = require('./util/util.js')
 const number = '91708509'
 
 const app = express();
@@ -50,23 +50,24 @@ app.post('/get-token', (req, res) => {
   res.status(200).json(token);
 });   
 
-// validation form
-app.get('/validate', (req, res) => {
-  return res.sendFile(path.join(__dirname, 'public/validate.html'))
-})
-
 // verify code
 app.post('/validate', async (req, res) => {
   const code = req.body.code;
   console.log(code)
-
+  let valid = false;
+  let attempt = -1;
   // check if code matches with any stored in db
   if (await checkCode(number, code)) {
     console.log('code valid')
+    valid = true;
+    res.json({valid, attempt});
   } else {
     console.log('wrong code, try again!') 
+    valid = false;
+    attempt = await readAttempt(number);
+    res.json({valid, attempt});
   } 
-
+  
 })
 
 const PORT = 3000;
